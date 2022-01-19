@@ -1,0 +1,3 @@
+C:/vtk/examples/cm/OBJImporter/OBJImporter/build/CMakeFiles/OBJImporter.dir
+C:/vtk/examples/cm/OBJImporter/OBJImporter/build/CMakeFiles/ALL_BUILD.dir
+C:/vtk/examples/cm/OBJImporter/OBJImporter/build/CMakeFiles/ZERO_CHECK.dir

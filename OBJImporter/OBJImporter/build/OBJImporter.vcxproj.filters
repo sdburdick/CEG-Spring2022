@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\vtk\examples\cm\OBJImporter\OBJImporter\OBJImporter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\vtk\examples\cm\OBJImporter\OBJImporter\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4C93719F-C88E-3833-B236-776D2FE64799}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
