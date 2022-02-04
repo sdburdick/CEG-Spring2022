@@ -313,6 +313,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\locations.cpp" />
     <ClCompile Include="C:\vtk\examples\cm\OBJImporter\OBJImporter\OBJImporter.cxx" />
   </ItemGroup>
   <ItemGroup>

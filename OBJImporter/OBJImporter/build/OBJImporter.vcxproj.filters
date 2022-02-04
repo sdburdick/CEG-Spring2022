@@ -4,6 +4,9 @@
     <ClCompile Include="C:\vtk\examples\cm\OBJImporter\OBJImporter\OBJImporter.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\locations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\vtk\examples\cm\OBJImporter\OBJImporter\CMakeLists.txt" />

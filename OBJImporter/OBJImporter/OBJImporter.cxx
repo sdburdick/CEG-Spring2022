@@ -24,11 +24,13 @@
 #include <vtkInformationVector.h>
 #include <vtkDelimitedTextReader.h>
 #include <vtkTable.h>
+#include <vtkCellArray.h>
 
-int size = 50;
+//extern int main2(int argc, char* argv[]);
+//#include "locations.cpp"
 
 //brought to global scope to allow keyboard callback to update
-vtkNew<vtkOBJImporter> importer;
+vtkNew<vtkOBJImporter> globeImporter;
 vtkNew<vtkRenderWindow> renWin;
 vtkNew<vtkSphereSource> sphere;
 vtkNew<vtkActor> polyActor;
@@ -96,12 +98,14 @@ namespace {
             {
                 polyActor->SetScale(*polyActor->GetScale()+1);
                 std::cout << "The PgUp was pressed." << std::endl;
+                std::cout << "Size is " << *polyActor->GetScale() << std::endl;
             }
             if (key == "Next")
             {
                 if (*polyActor->GetScale() >= 1.0) {
-                    polyActor->SetScale(*polyActor->GetScale() -1 );
+                    polyActor->SetScale(*polyActor->GetScale()-1 );
                 }
+                std::cout << "Size is " << *polyActor->GetScale() << std::endl;
                 std::cout << "The Pg Down was pressed." << std::endl;
             }
             if (key == "o")
@@ -142,42 +146,27 @@ int main(int argc, char* argv[])
   }
 
   
-  importer->SetFileName(argv[1]);
-  importer->SetFileNameMTL(argv[2]);
-  importer->SetTexturePath(argv[3]);
+  globeImporter->SetFileName(argv[1]);
+  globeImporter->SetFileNameMTL(argv[2]);
+  globeImporter->SetTexturePath(argv[3]);
 
   vtkNew<vtkNamedColors> colors;
-
   vtkNew<vtkRenderer> renderer;
- 
-  
-  vtkNew<vtkRenderWindowInteractor> iren;
+  vtkNew<vtkRenderWindowInteractor> renWinInteractor;
 
-  renderer->SetBackground2(colors->GetColor3d("Silver").GetData());
-  renderer->SetBackground(.2,.2,.4);
   
   renderer->GradientBackgroundOn();
-    
-  //read the points?
-  vtkSmartPointer<vtkPolyData> polyData;
-  
-
-  ///////auto polyDataPoints = ReadPolyData("..//locations.dat");
+ 
   // Visualize
   vtkNew<vtkPolyDataMapper> mapper;
-  ///////mapper->SetInputData(polyDataPoints);
   
-  ///////vtkNew<vtkDataObjectToTable>pointTable;
-  ///////pointTable->SetInputData(polyDataPoints);
-  ///////pointTable->Update();
-  //pointTable->GetOutput()->AddColumn(polyDataPoints->GetData());
-  //vtkNew<vtkDelimitedTextWriter>
+  
 
-
-  //begin data loadout and manip
+  //begin point data loadout and manip
 
   //adapted from https://discourse.vtk.org/t/how-to-speed-up-about-loading-csv-file/1111
   vtkNew<vtkDelimitedTextReader> m_vtkCSVReader;
+  polyActor->GetProperty()->SetPointSize(4);
 
   m_vtkCSVReader->SetFileName("..//locations.dat");
   m_vtkCSVReader->DetectNumericColumnsOn();
@@ -194,73 +183,57 @@ int main(int argc, char* argv[])
   //convert the loaded points into their location on the globe:
   vtkNew<vtkGeoMath> geo;
   double rect[3];
+  pointsFromFile->SetNumberOfPoints(rows); 
+  
+  vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
+  pointIds->SetNumberOfIds(rows);
+
+  vtkSmartPointer<vtkCellArray> PolyPoint = vtkSmartPointer<vtkCellArray>::New();
+  
   for (vtkIdType i = 0; i < rows; i++)
   {
-      double tableVals[3] = { table->GetValue(0, i).ToDouble(), table->GetValue(1, i).ToDouble(), table->GetValue(2, i).ToDouble() };
+      double tableVals[3] = { table->GetValue(i, 0).ToDouble(), table->GetValue(i, 1).ToDouble(), table->GetValue(i, 2).ToDouble() };
       geo->LongLatAltToRect(tableVals, rect);
           //std::cout << "Point " << i << "| " << j << "= " << table->GetValue(j,i).ToDouble() << std::endl;
-      pointsFromFile->InsertNextPoint(rect);
-
-     
+     //vtkIdType id = pointsFromFile->InsertNextPoint(rect[0]/6378000, rect[1] / 6378000, rect[2] / 6378000);
+      vtkIdType id = pointsFromFile->InsertNextPoint(rect);
+      //vtkIdType id = pointsFromFile->InsertNextPoint(i, i, i);
+      PolyPoint->InsertNextCell(1);
+      PolyPoint->InsertCellPoint(id);
+      
+      //pointsFromFile->InsertNextPoint(-i, -i, -i);
+      
   }
+  
+  //PolyPoint->InsertNextCell(pointIds);
+  //vtkNew<vtkPolyData> polyDataPoints;
   vtkNew<vtkPolyData> polyDataPoints;
-
-
+  vtkNew<vtkCellArray> dotAppearance;
+  //dotAppearance->
+  //polyDataPoints->SetVerts(
+  
+    
 
   polyDataPoints->SetPoints(pointsFromFile);
+  polyDataPoints->SetVerts(PolyPoint);
+
+
   mapper->SetInputData(polyDataPoints);
   //end data manipulation of locations.dat
-
-
-
-  //auto polyData1 = ReadPolyData("..//locations.dat");
-  //polydata1->vtkPolyData->vtkPointSet->points->vtkPoints->data->buffer
-
-  //vtkNew<vtkInformationVector> infoVec;
-  //polyData1->GetData(infoVec);
   
-  //for (int i = 0; i < polyData1->GetData()->GetNumberOfInformationObjects(); i++) {
-    //  infoVec->Print(std::cout);
-  //}
 
-
-  //vtkNew<vtkPointData>pdata;
-  //vtkPointData* pdataP = polyData1->GetPointData();
-  //polyData1->
-  //vtkNew<vtkPolyDataMapper> mapper1;
-  //mapper1->SetInputData(polyData1);//convert the data into a visual state
-
-  
-  
-  //geo->LongLatAltToRect(polyData1->GetData()
-  
   polyActor->SetMapper(mapper);
   polyActor->GetProperty()->SetDiffuseColor(
       colors->GetColor3d("Light_salmon").GetData());
   polyActor->GetProperty()->SetSpecular(0.6);
   polyActor->GetProperty()->SetSpecularPower(30);
-  polyActor->SetScale(117.25);
+  //polyActor->SetScale(117.25);
   polyActor->SetPosition(13.2, 7.4, -21.1);
-  // Create textActors
-  //vtkNew<vtkTextMapper> textMapper;
-  //textMapper->SetTextProperty(textProperty);
-  //textMapper->SetInput(vtksys::SystemTools::GetFilenameName(argv[i]).c_str());
-
-  //vtkNew<vtkActor2D> textActor;
-  //textActor->SetMapper(textMapper);
-  //textActor->SetPosition(20, 20);
+  
 
   // Setup renderer
-  //vtkNew<vtkRenderer> renderer;
   renderer->AddActor(polyActor);
-  //renderer->AddActor(textActor);
   renderer->SetBackground(colors->GetColor3d("mint").GetData());
-  //renderers.push_back(renderer);
-  //renderWindow->AddRenderer(renderer);
-
-
-
-
 
   //model the ocean under the wireframe
   sphere->SetRadius(58.4);
@@ -274,53 +247,34 @@ int main(int argc, char* argv[])
   sphereActor->SetOrigin(0, 0, 0);
   sphereActor->SetPosition(13.2, 7.4, -21.1);
   sphereActor->GetProperty()->SetColor(0, 0, 1);
+  //use the same renderer
   renderer->AddActor(sphereActor);
   //end sphere
 
   //add the parts to the window for display
-  renWin->AddRenderer(renderer);
+//  renWin->AddRenderer(renderer);
   renderer->UseHiddenLineRemovalOn();
   renWin->AddRenderer(renderer);
   renWin->SetSize(800, 600);
   renWin->SetWindowName("Homework 1 - points on a globe");
   //2 5.5, -20.6, 57
-  iren->SetRenderWindow(renWin);
+  renWinInteractor->SetRenderWindow(renWin);
   vtkNew<KeyPressInteractorStyle> style;
   vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
   renderWindowInteractor->SetRenderWindow(renWin);
   renderWindowInteractor->SetInteractorStyle(style);
   style->SetCurrentRenderer(renderer);
 
-  importer->SetRenderWindow(renWin);
-  importer->Update();
+  globeImporter->SetRenderWindow(renWin);
+  globeImporter->Update();
 
-  auto actors = renderer->GetActors();
-  actors->InitTraversal();
-  std::cout << "There are " << actors->GetNumberOfItems() << " actors"
-            << std::endl;
 
-  for (vtkIdType a = 0; a < actors->GetNumberOfItems(); ++a)
-  {
-    std::cout << importer->GetOutputDescription(a) << std::endl;
+  //::main2(argc, argv);
 
-    vtkActor* actor = actors->GetNextActor();
-
-    // OBJImporter turns texture interpolation off
-    if (actor->GetTexture())
-    {
-      std::cout << "Has texture\n";
-      actor->GetTexture()->InterpolateOn();
-    }
-
-    //vtkPolyData* pd =
-      //  dynamic_cast<vtkPolyData*>(actor->GetMapper()->GetInput());
-
-//    vtkPolyDataMapper* mapper =
-  //      dynamic_cast<vtkPolyDataMapper*>(actor->GetMapper());
-    //mapper->SetInputData(pd);
-  }
   renWin->Render();
-  iren->Start();
+  renWinInteractor->Start();
 
+
+  
   return EXIT_SUCCESS;
 }
