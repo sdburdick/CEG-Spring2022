@@ -19,6 +19,7 @@
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkTextMapper.h>
 
+#include <vtkAssembly.h>
 #include <vtkGeoMath.h>
 #include <vtkPointData.h>
 #include <vtkInformationVector.h>
@@ -74,37 +75,41 @@ namespace {
             sphere->GetCenter(datal);
             std::cout << "Sphere: [ " << datal[0] << ", " << datal[1] << ", " << datal[2] << ", " << sphere->GetRadius() << "]" << std::endl;
             // Handle an arrow key
+
+            
+            int x=0;
+            int y=0;
+            int z=0;
+
             if (key == "Up")
             {
-                sphere->SetCenter(datal[0] + .1, datal[1], datal[2]);
-                std::cout << "The up arrow was pressed." << std::endl;
+                x--;
+                std::cout << "The up arrow was pressed. " << polyActor->GetOrientationWXYZ()[3] << std::endl;
             }
             if (key == "Down")
             {
-                sphere->SetCenter(datal[0] - .1, datal[1], datal[2]);
-                std::cout << "The dn arrow was pressed." << std::endl;
+                x++;
+                std::cout << "The up arrow was pressed. " << polyActor->GetOrientationWXYZ()[3] << std::endl;
             }
             if (key == "Left")
             {
-                sphere->SetCenter(datal[0], datal[1]+.1, datal[2]);
-                std::cout << "The lt arrow was pressed." << std::endl;
+                y--;
+                std::cout << "The up arrow was pressed. " << polyActor->GetOrientationWXYZ()[1] << std::endl;
             }
             if (key == "Right")
             {
-                sphere->SetCenter(datal[0], datal[1] - .1, datal[2]);
-                std::cout << "The rt arrow was pressed." << std::endl;
+                y++;
+                std::cout << "The up arrow was pressed. " << polyActor->GetOrientationWXYZ()[1] << std::endl;
             }
             if (key == "Prior")
             {
-                polyActor->SetScale(*polyActor->GetScale()+1);
+                z++;
                 std::cout << "The PgUp was pressed." << std::endl;
                 std::cout << "Size is " << *polyActor->GetScale() << std::endl;
             }
             if (key == "Next")
             {
-                if (*polyActor->GetScale() >= 1.0) {
-                    polyActor->SetScale(*polyActor->GetScale()-1 );
-                }
+                z--;
                 std::cout << "Size is " << *polyActor->GetScale() << std::endl;
                 std::cout << "The Pg Down was pressed." << std::endl;
             }
@@ -124,6 +129,12 @@ namespace {
             {
                 std::cout << "The a key was pressed." << std::endl;
             }
+            polyActor->RotateWXYZ(x, 1, 0, 0);
+            polyActor->RotateWXYZ(y, 0, 1, 0);
+            polyActor->RotateWXYZ(z, 0, 0, 1);
+            double polyOr[3];
+            polyActor->GetOrientation(polyOr);
+            std::cout << polyOr[0] << " " << polyOr[1] << " " << polyOr[2] << std::endl;
             renWin->Render();
             // Forward events
             vtkInteractorStyleTrackballCamera::OnKeyPress();
@@ -166,9 +177,10 @@ int main(int argc, char* argv[])
 
   //adapted from https://discourse.vtk.org/t/how-to-speed-up-about-loading-csv-file/1111
   vtkNew<vtkDelimitedTextReader> m_vtkCSVReader;
-  polyActor->GetProperty()->SetPointSize(4);
+  polyActor->GetProperty()->SetPointSize(6);
 
   m_vtkCSVReader->SetFileName("..//locations.dat");
+  //m_vtkCSVReader->SetFileName("..//oneloc.dat");
   m_vtkCSVReader->DetectNumericColumnsOn();
   m_vtkCSVReader->SetFieldDelimiterCharacters(" ");
   m_vtkCSVReader->Update();
@@ -180,7 +192,9 @@ int main(int argc, char* argv[])
   int rows = table->GetNumberOfRows();
   int cols = table->GetNumberOfColumns();
 
+  ////////////////////////////////////////
   //convert the loaded points into their location on the globe:
+  ////////////////////////////////////////
   vtkNew<vtkGeoMath> geo;
   double rect[3];
   pointsFromFile->SetNumberOfPoints(rows); 
@@ -190,45 +204,42 @@ int main(int argc, char* argv[])
 
   vtkSmartPointer<vtkCellArray> PolyPoint = vtkSmartPointer<vtkCellArray>::New();
   
+  double scalarVal = 6378.0;
   for (vtkIdType i = 0; i < rows; i++)
   {
       double tableVals[3] = { table->GetValue(i, 0).ToDouble(), table->GetValue(i, 1).ToDouble(), table->GetValue(i, 2).ToDouble() };
       geo->LongLatAltToRect(tableVals, rect);
-          //std::cout << "Point " << i << "| " << j << "= " << table->GetValue(j,i).ToDouble() << std::endl;
-     //vtkIdType id = pointsFromFile->InsertNextPoint(rect[0]/6378000, rect[1] / 6378000, rect[2] / 6378000);
-      vtkIdType id = pointsFromFile->InsertNextPoint(rect);
-      //vtkIdType id = pointsFromFile->InsertNextPoint(i, i, i);
+      //these positions seem to be in long/lat form, with a lot of bad data
+      vtkIdType id = pointsFromFile->InsertNextPoint((double)rect[1] / scalarVal, (double)rect[0] / scalarVal, (double)rect[2] / scalarVal);
       PolyPoint->InsertNextCell(1);
       PolyPoint->InsertCellPoint(id);
-      
-      //pointsFromFile->InsertNextPoint(-i, -i, -i);
-      
   }
-  
-  //PolyPoint->InsertNextCell(pointIds);
-  //vtkNew<vtkPolyData> polyDataPoints;
   vtkNew<vtkPolyData> polyDataPoints;
   vtkNew<vtkCellArray> dotAppearance;
-  //dotAppearance->
-  //polyDataPoints->SetVerts(
   
-    
-
   polyDataPoints->SetPoints(pointsFromFile);
   polyDataPoints->SetVerts(PolyPoint);
 
 
   mapper->SetInputData(polyDataPoints);
+  /////////////////////////////////////
   //end data manipulation of locations.dat
-  
+  ////////////////////////////////////////
 
   polyActor->SetMapper(mapper);
   polyActor->GetProperty()->SetDiffuseColor(
       colors->GetColor3d("Light_salmon").GetData());
   polyActor->GetProperty()->SetSpecular(0.6);
   polyActor->GetProperty()->SetSpecularPower(30);
-  //polyActor->SetScale(117.25);
+  polyActor->SetScale(1.0/15.0);
   polyActor->SetPosition(13.2, 7.4, -21.1);
+  
+
+  //rotate IN THIS ORDER to match lat/long 0 0 to given earth graphic model
+  polyActor->RotateWXYZ(-50, 0, 1, 0);//145
+  polyActor->RotateWXYZ(48.39, 1, 0, 0);//-21
+  polyActor->RotateWXYZ(104.6, 0, 0, 1);//54
+
   
 
   // Setup renderer
@@ -268,6 +279,10 @@ int main(int argc, char* argv[])
   globeImporter->SetRenderWindow(renWin);
   globeImporter->Update();
 
+
+  //vtkNew<vtkAssembly>assembly;
+  //assembly->AddPart(sphereActor);
+  //assembly->AddPart(polyActor);
 
   //::main2(argc, argv);
 
