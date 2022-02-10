@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 
   vtkSmartPointer<vtkCellArray> PolyPoint = vtkSmartPointer<vtkCellArray>::New();
   
-  double scalarVal = 6378.0;
+  double scalarVal = 7000;
   for (vtkIdType i = 0; i < rows; i++)
   {
       double tableVals[3] = { table->GetValue(i, 0).ToDouble(), table->GetValue(i, 1).ToDouble(), table->GetValue(i, 2).ToDouble() };
