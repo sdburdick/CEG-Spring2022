@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
-project(OBJImporter)
+project(CEG7560-1)
 
 find_package(VTK COMPONENTS 
   vtkCommonColor
@@ -14,27 +14,32 @@ find_package(VTK COMPONENTS
   vtkRenderingFreeType
   vtkRenderingGL2PSOpenGL2
   vtkRenderingOpenGL2
+  vtkFiltersSources
+  vtkIOImport
+  vtkInfovisCore
+  vtkInfovisLayout
+  vtkIOInfovis
   QUIET
 )
 
 if (NOT VTK_FOUND)
-  message("Skipping OBJImporter: ${VTK_NOT_FOUND_MESSAGE}")
+  message("Skipping CEG7560-1: ${VTK_NOT_FOUND_MESSAGE}")
   return()
 endif()
 message (STATUS "VTK_VERSION: ${VTK_VERSION}")
 if (VTK_VERSION VERSION_LESS "8.90.0")
   # old system
   include(${VTK_USE_FILE})
-  add_executable(OBJImporter MACOSX_BUNDLE OBJImporter.cxx )
-  target_link_libraries(OBJImporter PRIVATE ${VTK_LIBRARIES})
+  add_executable(CEG7560-1 MACOSX_BUNDLE CEG7560-1.cxx )
+  target_link_libraries(CEG7560-1 PRIVATE ${VTK_LIBRARIES})
 else()
   # Prevent a "command line is too long" failure in Windows.
   set(CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files.")
-  add_executable(OBJImporter MACOSX_BUNDLE OBJImporter.cxx )
-  target_link_libraries(OBJImporter PRIVATE ${VTK_LIBRARIES})
+  add_executable(CEG7560-1 MACOSX_BUNDLE CEG7560-1.cxx )
+  target_link_libraries(CEG7560-1 PRIVATE ${VTK_LIBRARIES})
   # vtk_module_autoinit is needed
   vtk_module_autoinit(
-    TARGETS OBJImporter
+    TARGETS CEG7560-1
     MODULES ${VTK_LIBRARIES}
     )
 endif()
