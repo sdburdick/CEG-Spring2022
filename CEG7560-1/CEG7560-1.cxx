@@ -27,9 +27,6 @@
 #include <vtkTable.h>
 #include <vtkCellArray.h>
 
-//extern int main2(int argc, char* argv[]);
-//#include "locations.cpp"
-
 //brought to global scope to allow keyboard callback to update
 vtkNew<vtkOBJImporter> globeImporter;
 vtkNew<vtkRenderWindow> renWin;
@@ -38,7 +35,6 @@ vtkNew<vtkActor> polyActor;
 
 
 namespace {
-
     vtkSmartPointer<vtkPolyData> ReadPolyData(const char* fileName)
     {
         vtkSmartPointer<vtkPolyData> polyData;
@@ -49,11 +45,10 @@ namespace {
         polyData = source->GetOutput();
         return polyData;
     }
-
 } // namespace
 
+//Burdick - this block of code allowed me to interact with the drawn area from the keyboard to better align data points / sizes
 namespace {
-
     // Define interaction style
     class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     {
@@ -66,30 +61,21 @@ namespace {
             // Get the keypress
             vtkRenderWindowInteractor* rwi = this->Interactor;
             std::string key = rwi->GetKeySym();
-            
-            //importer->Update();
-            
             // Output the key that was pressed
             std::cout << "Pressed " << key << std::endl;
             double datal[3];
             sphere->GetCenter(datal);
             std::cout << "Sphere: [ " << datal[0] << ", " << datal[1] << ", " << datal[2] << ", " << sphere->GetRadius() << "]" << std::endl;
-            // Handle an arrow key
-
-            
             int x=0;
             int y=0;
             int z=0;
 
-
             if (key == "q")
             {
-//                scalarVal += 10;;
                 std::cout << "The up arrow was pressed. " << polyActor->GetOrientationWXYZ()[3] << std::endl;
             }
             if (key == "a")
             {
-  //              scalarVal -= 1;;
                 std::cout << "The up arrow was pressed. " << polyActor->GetOrientationWXYZ()[3] << std::endl;
             }
             if (key == "Up")
@@ -154,6 +140,7 @@ namespace {
     vtkStandardNewMacro(KeyPressInteractorStyle);
 
 } // namespace
+
 
 
 int main(int argc, char* argv[])
